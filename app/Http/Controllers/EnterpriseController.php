@@ -6,6 +6,7 @@ use App\Http\Requests\StoreEnterpriseRequest;
 use App\Http\Requests\UpdateEnterpriseRequest;
 use App\Models\Enterprise;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
 
 class EnterpriseController extends Controller
 {
@@ -16,7 +17,25 @@ class EnterpriseController extends Controller
      */
     public function index()
     {
-        return Enterprise::all();
+        $enterprises = Enterprise::all();
+        $enterpriseAr = [];
+
+        foreach($enterprises as $enterprise){
+            $enterpriseAr[] = [
+                'id' => $enterprise->id,
+                'name' => $enterprise->name,
+                'total' => $enterprise->total,
+                'total_cost' => $enterprise->total_cost,
+                'products' => $enterprise->products()
+            ];
+        }
+
+        return view(
+            'enterprises',
+            [
+                'enterprises' => $enterpriseAr
+            ]
+        );
     }
 
     /**
@@ -29,13 +48,13 @@ class EnterpriseController extends Controller
     {
         $enterpriseModel = new Enterprise;
         $enterpriseModel->name = $request->name;
-        $enterpriseModel->total = $request->total;
-        $enterpriseModel->total_cost = $request->total_cost;
+        $enterpriseModel->total = 0;
+        $enterpriseModel->total_cost = 0;
         if ($enterpriseModel->save()) {
-            return ["Criada a empresa"];
+            return Redirect::to('/enterprise')->withSuccess('Criada a empresa');
         }
 
-        return ["Houve um erro"];
+        return Redirect::to('/enterprise')->withSuccess('A empresa não pode ser criada, tente novamente mais tarde');
     }
 
     /**
@@ -55,14 +74,13 @@ class EnterpriseController extends Controller
             $enterprise = Enterprise::where('id', $request->id)->first();
 
             $enterprise->name = !is_null($request->name) ? $request->name : $enterprise->name;
-            $enterprise->total = !is_null($request->total) ? $request->total : $enterprise->total;
-            $enterprise->total_cost = !is_null($request->total_cost) ? $request->total_cost : $enterprise->total_cost;
             if ($enterprise->save()) {
-                return $enterprise;
+
+                return Redirect::to('/enterprise')->withSuccess('Edição da empresa feita');
             }
 
-            return (object) ['error' => 'Não foi possivel fazer a edição'];
         }
+        return Redirect::to('/enterprise')->withFail('Ocorreu um erro na edição da empresa :(');
     }
 
     /**

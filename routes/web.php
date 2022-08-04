@@ -38,3 +38,5 @@ Route::prefix(
         Route::delete('/{products}', [ProductsController::class, 'destroy'])->name('delete.products');
     }
 );
+
+Route::view('/', 'home');

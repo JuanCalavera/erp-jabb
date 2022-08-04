@@ -20,7 +20,8 @@ class ProductsController extends Controller
         $returnProducts = [];
 
         foreach($products as $product){
-            $returnProducts[] = (object) [
+            $returnProducts[] = [
+                'id' => $product->id,
                 'sku' => $product->sku,
                 'quantity' => $product->quantity,
                 'cost' => $product->cost,
@@ -29,7 +30,7 @@ class ProductsController extends Controller
             ];
         }
 
-        return $returnProducts;
+        return view('products', ['products' => $returnProducts]);
     }
 
     public function store(Request $request)
@@ -40,7 +41,7 @@ class ProductsController extends Controller
         $productModel->quantity = $request->quantity;
         $productModel->enterprise = $request->enterprise;
         $productModel->cost = $request->cost;
-        $productModel->total_cost = $request->total_cost;
+        $productModel->total_cost = $request->cost * $request->quantity;
 
         if($productModel->save()){
             return (object) ['success' => "{$productModel->sku} criado."];
