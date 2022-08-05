@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\EnterpriseController;
+use App\Http\Controllers\LogsController;
 use App\Http\Controllers\ProductsController;
 use Illuminate\Support\Facades\Route;
 
@@ -36,7 +37,8 @@ Route::prefix(
         Route::post('/update-products', [ProductsController::class, 'updateEnterprise'])->name('update.products');
         Route::get('/{products}', [ProductsController::class, 'show'])->name('show.products');
         Route::delete('/{products}', [ProductsController::class, 'destroy'])->name('delete.products');
+        Route::post('/action-quantity', [ProductsController::class, 'quantity'])->name('quantity.products');
     }
 );
 
-Route::view('/', 'home');
+Route::get('/', [LogsController::class, 'index'])->name('logs');

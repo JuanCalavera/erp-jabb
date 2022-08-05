@@ -4,11 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductsRequest;
 use App\Http\Requests\UpdateProductsRequest;
+use App\Models\Enterprise;
 use App\Models\Products;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Redirect;
+use App\Http\Controllers\LogsController;
 
 class ProductsController extends Controller
 {
+
     /**
      * Display a listing of the resource.
      *
@@ -16,10 +20,11 @@ class ProductsController extends Controller
      */
     public function index()
     {
-        $products = Products::all();
+        $products = Products::orderBy('sku')->get();
+        $enterprisesId = Enterprise::select('id', 'name')->orderBy('name')->get();
         $returnProducts = [];
 
-        foreach($products as $product){
+        foreach ($products as $product) {
             $returnProducts[] = [
                 'id' => $product->id,
                 'sku' => $product->sku,
@@ -30,7 +35,10 @@ class ProductsController extends Controller
             ];
         }
 
-        return view('products', ['products' => $returnProducts]);
+        return view('products', [
+            'products' => $returnProducts,
+            'enterprises' => $enterprisesId
+        ]);
     }
 
     public function store(Request $request)
@@ -40,14 +48,16 @@ class ProductsController extends Controller
         $productModel->sku = $request->sku;
         $productModel->quantity = $request->quantity;
         $productModel->enterprise = $request->enterprise;
-        $productModel->cost = $request->cost;
-        $productModel->total_cost = $request->cost * $request->quantity;
+        $productModel->cost = (double) $request->cost;
+        $productModel->total_cost = $productModel->cost * $productModel->quantity;
 
-        if($productModel->save()){
-            return (object) ['success' => "{$productModel->sku} criado."];
+        if ($productModel->save()) {
+            $this->updateEnterprise($productModel->enterprise);
+            (new LogsController)->create('success', "{$productModel->sku} criado.");
+            return Redirect::route('all.products')->withSuccess("{$productModel->sku} criado.");
         }
-
-        return (object) ['error' => "Houve um erro tente mais tarde"];
+        (new LogsController)->create('danger', "Houve um erro ao criar um produto");
+        return Redirect::route('all.products')->withSuccess("Houve um erro tente mais tarde");
     }
 
     /**
@@ -70,15 +80,16 @@ class ProductsController extends Controller
             $product = Products::where('id', $request->id)->first();
 
             $product->sku = !is_null($request->sku) ? $request->sku : $product->sku;
-            $product->quantity = !is_null($request->quantity) ? $request->quantity : $product->quantity;
             $product->enterprise = !is_null($request->enterprise) ? $request->enterprise : $product->enterprise;
             $product->cost = !is_null($request->cost) ? $request->cost : $product->cost;
             if ($product->save()) {
                 $product->total_cost = 'R$ ' . ($product->quantity + $product->cost);
                 $product->save();
-                return $product;
+                (new LogsController)->create('success', "Produto {$product->sku} com o preço {$product->cost} alterado");
+                return Redirect::route('all.products');
             }
 
+            (new LogsController)->create('danger', 'Não foi possivel fazer a edição');
             return (object) ['error' => 'Não foi possivel fazer a edição'];
         }
     }
@@ -92,10 +103,62 @@ class ProductsController extends Controller
     public function destroy(Products $products)
     {
         $name = $products->sku;
-        if($products->delete()){
-            return (object) ['success' => "A empresa {$name} foi deletada"];
+        if ($products->delete()) {
+            (new LogsController)->create('success', "O produto {$name} foi deletado");
+            return Redirect::route('all.products')->withSuccess("O produto {$name} foi deletado");
         }
 
-        return (object) ['error' => "Houve um erro"];
+        (new LogsController)->create('danger', "O produto {$name} não foi possível ser deletado");
+        return Redirect::route('all.products')->withFail("O produto {$name} não foi possível ser deletado");
+    }
+
+    public function quantity(Request $request)
+    {
+        if (!is_null($request->id)) {
+            $product = Products::where('id', $request->id)->first();
+            $fail = "Não foi possível atualizar a quantidade do produto";
+            switch ($request->action) {
+                case 'add':
+                    $product->quantity += $request->quantity;
+                    $product->total_cost = $product->quantity * $product->cost;
+                    $stringMessage = "Foi adicionada {$request->quantity} unidades/kits para o produto {$product->sku}";
+                    break;
+
+                case 'devolution':
+                    $product->quantity += $request->quantity;
+                    $product->total_cost = $product->quantity * $product->cost;
+                    $stringMessage = "Foi adicionada {$request->quantity} unidades/kits devolvidos do produto {$product->sku}";
+                    break;
+
+                case 'exit':
+                    $product->quantity -= $request->quantity;
+                    $product->total_cost = $product->quantity * $product->cost;
+                    $stringMessage = "Foi removido {$request->quantity} unidades/kits do produto {$product->sku}";
+                    break;
+
+                default:
+                    return Redirect::route('all.products')->withFail($fail);
+                    break;
+            }
+        }
+        if ($product->save()) {
+            $this->updateEnterprise($product->enterprise);
+            (new LogsController)->create('success', $stringMessage);
+            return Redirect::route('all.products')->withSuccess($stringMessage);
+        }
+        (new LogsController)->create('danger', $fail);
+        return Redirect::route('all.products')->withFail($fail);
+    }
+
+    private function updateEnterprise(int $id): void
+    {
+        $products = Products::select('total_cost')->where('enterprise', $id)->get();
+        $enterpriseModel = Enterprise::where('id', $id)->first();
+        $enterpriseModel->total = count($products);
+        $totalCost = 0;
+        foreach ($products as $product) {
+            $totalCost += $product->total_cost;
+        }
+        $enterpriseModel->total_cost = $totalCost;
     }
 }

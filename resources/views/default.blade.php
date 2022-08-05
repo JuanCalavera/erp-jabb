@@ -17,9 +17,9 @@
             </button>
             <div class="collapse navbar-collapse" id="main_nav">
                 <ul class="navbar-nav ms-auto">
-                    <li class="nav-item"><a class="nav-link" href="{{route('all.enterprise')}}"> Empresas </a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"> Produtos </a></li>
-                    <li class="nav-item"><a class="nav-link" href="#"> Logs </a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('all.enterprise') }}"> Empresas </a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('all.products') }}"> Produtos </a></li>
+                    <li class="nav-item"><a class="nav-link" href="{{ route('logs') }}"> Logs </a></li>
                 </ul>
             </div>
         </div>
@@ -33,4 +33,5 @@
     <script src="{{ asset('js/bootstrap.min.js') }}"></script>
     @yield('scripts')
 </footer>
+
 </html>

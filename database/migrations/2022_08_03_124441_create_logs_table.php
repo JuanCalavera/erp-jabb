@@ -16,8 +16,7 @@ return new class extends Migration
         Schema::create('logs', function (Blueprint $table) {
             $table->id();
             $table->string('status');
-            $table->string('product_sku');
-            $table->bigInteger('product_quantity');
+            $table->string('content');
             $table->timestamps();
         });
     }

@@ -17,7 +17,7 @@ class EnterpriseController extends Controller
      */
     public function index()
     {
-        $enterprises = Enterprise::all();
+        $enterprises = Enterprise::orderBy('name')->get();
         $enterpriseAr = [];
 
         foreach($enterprises as $enterprise){
@@ -51,9 +51,11 @@ class EnterpriseController extends Controller
         $enterpriseModel->total = 0;
         $enterpriseModel->total_cost = 0;
         if ($enterpriseModel->save()) {
-            return Redirect::to('/enterprise')->withSuccess('Criada a empresa');
+            (new LogsController)->create('success', "Criada a empresa {$enterpriseModel->name}");
+            return Redirect::to('/enterprise')->withSuccess("Criada a empresa {$enterpriseModel->name}");
         }
 
+        (new LogsController)->create('danger', "Erro ao criar uma empresa");
         return Redirect::to('/enterprise')->withSuccess('A empresa não pode ser criada, tente novamente mais tarde');
     }
 
@@ -76,11 +78,13 @@ class EnterpriseController extends Controller
             $enterprise->name = !is_null($request->name) ? $request->name : $enterprise->name;
             if ($enterprise->save()) {
 
+                (new LogsController)->create('success', "Edição da empresa {$enterprise->name} feita");
                 return Redirect::to('/enterprise')->withSuccess('Edição da empresa feita');
             }
 
         }
-        return Redirect::to('/enterprise')->withFail('Ocorreu um erro na edição da empresa :(');
+        (new LogsController)->create('danger', "Ocorreu um erro na edição da empresa {$enterprise->name}");
+        return Redirect::to('/enterprise')->withFail("Ocorreu um erro na edição da empresa {$enterprise->name}");
     }
 
     /**
@@ -93,9 +97,11 @@ class EnterpriseController extends Controller
     {
         $name = $enterprise->name;
         if($enterprise->delete()){
-            return (object) ['success' => "A empresa {$name} foi deletada"];
+            (new LogsController)->create('success', "A empresa {$name} foi deletada");
+            return Redirect::route('all.enterprise')->withSuccess("A empresa {$name} foi deletada");
         }
 
-        return (object) ['error' => "Houve um erro"];
+        (new LogsController)->create('danger', "A empresa {$name} não foi deletada");
+        return Redirect::route('all.enterprise')->withFail("A empresa {$name} não foi deletada");
     }
 }
