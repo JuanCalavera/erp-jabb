@@ -24,7 +24,7 @@ Route::prefix(
         Route::post('/', [EnterpriseController::class, 'store'])->name('create.enterprise');
         Route::post('/update-enterprise', [EnterpriseController::class, 'updateEnterprise'])->name('update.enterprise');
         Route::get('/{enterprise}', [EnterpriseController::class, 'show'])->name('show.enterprise');
-        Route::delete('/{enterprise}', [EnterpriseController::class, 'destroy'])->name('delete.enterprise');
+        Route::get('/delete/{enterprise}', [EnterpriseController::class, 'destroy'])->name('delete.enterprise');
     }
 );
 
@@ -36,7 +36,7 @@ Route::prefix(
         Route::post('/', [ProductsController::class, 'store'])->name('create.products');
         Route::post('/update-products', [ProductsController::class, 'updateEnterprise'])->name('update.products');
         Route::get('/{products}', [ProductsController::class, 'show'])->name('show.products');
-        Route::delete('/{products}', [ProductsController::class, 'destroy'])->name('delete.products');
+        Route::get('/delete/{products}', [ProductsController::class, 'destroy'])->name('delete.products');
         Route::post('/action-quantity', [ProductsController::class, 'quantity'])->name('quantity.products');
     }
 );

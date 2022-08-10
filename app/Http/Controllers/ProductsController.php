@@ -104,7 +104,7 @@ class ProductsController extends Controller
     {
         $name = $products->sku;
         if ($products->delete()) {
-            (new LogsController)->create('success', "O produto {$name} foi deletado");
+            (new LogsController)->create('warning', "O produto {$name} foi deletado");
             return Redirect::route('all.products')->withSuccess("O produto {$name} foi deletado");
         }
 

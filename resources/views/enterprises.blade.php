@@ -66,17 +66,15 @@
                                     data-bs-target="#edit{{ $count }}">
                                     Editar
                                 </button>
-                                <form
-                                    action="{{ route('delete.enterprise', [
-                                        'enterprise' => $enterprise['id'],
-                                    ]) }}"
-                                    method="post">
-                                    @method('DELETE')
-                                    <button class="btn btn-danger" type="submit"
-                                        onclick="confirm('Tem certeza que deseja deletar esta empresa, as informações e produtos serão deletados juntos.')">
-                                        Deletar
-                                    </button>
-                                </form>
+                                <a href="{{ route('delete.enterprise', [
+                                    'enterprise' => $enterprise['id'],
+                                ]) }}"
+                                    onclick="
+                                        return confirm('Tem certeza que deseja deletar esta empresa, as informações e produtos serão deletados juntos!?')
+                                            "
+                                    class="btn btn-danger" type="submit">
+                                    Deletar
+                                </a>
                             </div>
                         </div>
                         @if (count($enterprise['products']) != 0)
@@ -139,8 +137,7 @@
                                 </div>
                                 <div class="modal-footer">
                                     <input type="hidden" name="id" value="{{ $enterprise['id'] }}">
-                                    <button type="button" class="btn btn-secondary"
-                                        data-bs-dismiss="modal">Fechar</button>
+                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Fechar</button>
                                     <button type="submit" class="btn btn-primary">Salvar Alterações</button>
                                 </div>
                             </form>

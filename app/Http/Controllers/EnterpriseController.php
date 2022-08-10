@@ -96,8 +96,16 @@ class EnterpriseController extends Controller
     public function destroy(Enterprise $enterprise)
     {
         $name = $enterprise->name;
+        
+        $products = $enterprise->products();
+        foreach($products as $product){
+            $nameProduct = $product->sku;
+            $product->delete();
+            (new LogsController)->create('warning', "O produto {$nameProduct} foi deletado");
+        }
+
         if($enterprise->delete()){
-            (new LogsController)->create('success', "A empresa {$name} foi deletada");
+            (new LogsController)->create('warning', "A empresa {$name} foi deletada");
             return Redirect::route('all.enterprise')->withSuccess("A empresa {$name} foi deletada");
         }
 
